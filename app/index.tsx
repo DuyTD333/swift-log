@@ -25,6 +25,13 @@ export default function HomeScreen() {
   );
   const [viewMode, setViewMode] = useState<HistoryViewMode>("day");
 
+  const pushToCheckIn = () => {
+    router.push({
+      pathname: "/checkin",
+      params: { date: selectedDate },
+    });
+  };
+
   useEffect(() => {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -73,7 +80,7 @@ export default function HomeScreen() {
       </SafeAreaView>
       {viewMode === "day" && !hasAttendance && (
         <SafeAreaView style={styles.buttonContainer}>
-          <Button label={"+"} onPress={() => router.push("/checkin")} />
+          <Button label={"+"} onPress={pushToCheckIn} />
         </SafeAreaView>
       )}
     </View>

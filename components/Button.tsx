@@ -2,15 +2,21 @@ import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
 export interface ButtonProps {
   label: string;
+  isDisabled?: boolean;
   onPress: () => void;
 }
 
-export default function Button({ label, onPress }: ButtonProps) {
+export default function Button({
+  label,
+  isDisabled = false,
+  onPress,
+}: ButtonProps) {
   return (
     <TouchableOpacity
       style={styles.button}
       onPress={onPress}
       activeOpacity={0.7}
+      disabled={isDisabled}
     >
       <Text style={styles.buttonText}>{label}</Text>
     </TouchableOpacity>

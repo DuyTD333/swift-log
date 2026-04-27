@@ -53,7 +53,6 @@ export const attendanceService = {
     }
 
     const record: AttendanceRecord = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       user_id: "current-user",
       location_id: params.locationId,
       location_name: params.locationName,
@@ -65,7 +64,16 @@ export const attendanceService = {
       date: checkInDate.toISOString().split("T")[0],
     };
 
-    await saveToStorage(STORAGE_KEYS.CURRENT_RECORD, record);
+    const history = await getFromStorage<AttendanceRecord[]>(
+      STORAGE_KEYS.HISTORY,
+    );
+    const mergedHistory = [record, ...(history || [])];
+    console.log('mergedHistory: ', JSON.stringify(mergedHistory, null, 2));
+
+    await Promise.all([
+      saveToStorage(STORAGE_KEYS.HISTORY, mergedHistory),
+      saveToStorage(STORAGE_KEYS.CURRENT_RECORD, record),
+    ]);
     return record;
   },
 
@@ -103,6 +111,49 @@ export const attendanceService = {
     ]);
 
     return updatedRecord;
+  },
+
+  async update(params: {
+    check_in_hour: number;
+    check_in_minute: number;
+    check_out_hour: number;
+    check_out_minute: number;
+    date: string;
+  }): Promise<AttendanceRecord> {
+    const attendanceRecord = await this.getByDate(params.date);
+    if (!attendanceRecord) {
+      throw new Error(`Không tìm thấy bản ghi update ${params.date}`);
+    }
+    const checkinDate = new Date();
+    if (
+      typeof params.check_in_hour === "number" &&
+      typeof params.check_in_minute === "number"
+    ) {
+      checkinDate.setHours(params.check_in_hour, params.check_in_minute, 0, 0);
+    }
+    const checkoutDate = new Date();
+    if (
+      typeof params.check_out_hour === "number" &&
+      typeof params.check_out_minute === "number"
+    ) {
+      checkoutDate.setHours(
+        params.check_out_hour,
+        params.check_out_minute,
+        0,
+        0,
+      );
+    }
+    const updatedAttendanceRecord: AttendanceRecord = {
+      ...attendanceRecord,
+      check_out_time: checkoutDate.toISOString(),
+      check_in_time: checkinDate.toISOString(),
+    };
+    const history = await getFromStorage<AttendanceRecord[]>(
+      STORAGE_KEYS.HISTORY,
+    );
+    const newHistory = [updatedAttendanceRecord, ...(history || [])];
+    await saveToStorage(STORAGE_KEYS.HISTORY, newHistory);
+    return updatedAttendanceRecord;
   },
 
   async syncPendingRecords(records: AttendanceRecord[]): Promise<void> {
