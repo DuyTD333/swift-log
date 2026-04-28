@@ -26,19 +26,16 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: "transparent",
-    borderRadius: 8,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: "#E8E8E4",
+    padding: 2,
     alignItems: "center",
   },
   cardLabel: {
     fontSize: 11,
     color: "#6B6B68",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   cardValue: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
   },
 });

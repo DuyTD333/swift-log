@@ -1,14 +1,8 @@
 import type { AppDispatch, RootState } from "@/store";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -16,7 +10,25 @@ import {
   checkOut,
   clearCurrentRecord,
   fetchAttendanceByDate,
+  updateAttendance,
 } from "../features/attendance/attendanceSlice";
+import { AttendanceRecord } from "@/features/attendance/attendanceTypes";
+import Form from "@/components/checkin/Form";
+import Button from "@/components/Button";
+import { dateToLocaleTimeString } from "@/utils";
+
+interface CheckIn {
+  hour: string;
+  minute: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface CheckOut extends CheckIn {}
+
+const initTime = {
+  hour: "",
+  minute: "",
+};
 
 export default function CheckInScreen() {
   const { date } = useLocalSearchParams();
@@ -26,86 +38,62 @@ export default function CheckInScreen() {
     (s: RootState) => s.attendance,
   );
 
-  const [editingRecord, setEditingRecord] = React.useState<any | null>(null);
-  const [hour, setHour] = React.useState<string>("");
-  const [minute, setMinute] = React.useState<string>("");
+  const [editingRecord, setEditingRecord] =
+    React.useState<AttendanceRecord | null>(null);
+  const [checkInTime, setCheckInTime] = React.useState<CheckIn>(initTime);
+  const [checkOutTime, setCheckOutTime] = React.useState<CheckOut>(initTime);
   const [errorMsg, setErrorMsg] = React.useState<string>("");
 
-  useEffect(() => {
-    (async () => {
-      try {
-        if (date && currentRecord?.date === date) {
-          setEditingRecord(null);
-          dispatch(clearCurrentRecord());
-          setHour("");
-          setMinute("");
-          return;
-        }
-
-        if (date && currentRecord?.date === date) {
-          setEditingRecord(currentRecord);
-        }
-      } catch (error: any) {
-        console.log("Error loading current record into state", error);
-      }
-    })();
-  }, [currentRecord, date, dispatch]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const action = await dispatch(fetchAttendanceByDate(date as string));
-        console.log("Fetched attendance for date", date, action);
-        const payload = (action as any).payload;
-        if (Array.isArray(payload) && payload.length > 0) {
-          const rec = payload[0];
-          setEditingRecord(rec);
-          if (rec.check_in_time) {
-            const d = new Date(rec.check_in_time);
-            setHour(String(d.getHours()).padStart(2, "0"));
-            setMinute(String(d.getMinutes()).padStart(2, "0"));
-          }
-        }
-      } catch (e: any) {
-        console.log("Failed to fetch attendance for date", date, e);
-        setErrorMsg("Không thể tải dữ liệu chấm công cho ngày này");
-      }
-    })();
-  }, [dispatch, date]);
+  const getRecordForDate = useCallback(async () => {
+    const record = await dispatch(fetchAttendanceByDate(date as string));
+    if (!record.payload) {
+      return;
+    }
+    const rec = record.payload as AttendanceRecord;
+    setEditingRecord(rec);
+    if (rec.check_in_time) {
+      const date = new Date(rec.check_in_time);
+      setCheckInTime({
+        hour: String(date.getHours()).padStart(2, "0"),
+        minute: String(date.getMinutes()).padStart(2, "0"),
+      });
+    }
+    if (rec.check_out_time) {
+      const date = new Date(rec.check_out_time);
+      setCheckOutTime({
+        hour: String(date.getHours()).padStart(2, "0"),
+        minute: String(date.getMinutes()).padStart(2, "0"),
+      });
+    }
+  }, [date, dispatch]);
 
   const handleCheckIn = useCallback(async () => {
-    if (hour === "" || minute === "") {
+    if (checkInTime.hour === "" || checkInTime.minute === "") {
       setErrorMsg("Vui lòng nhập giờ và phút");
       return;
     } else {
       setErrorMsg("");
     }
-    if (editingRecord) {
-      await dispatch(
-        checkOut({
-          hour: parseInt(hour, 10),
-          minute: parseInt(minute, 10),
-        }),
-      );
-    }
+
     await dispatch(
       checkIn({
-        locationId: "VY",
+        locationId: "LOTSO",
         locationName: "LOTSO",
         method: "manual",
-        date: new Date().toISOString().split("T")[0],
-        hour: parseInt(hour, 10),
-        minute: parseInt(minute, 10),
+        date: date as string,
+        hour: parseInt(checkInTime.hour, 10),
+        minute: parseInt(checkInTime.minute, 10),
       }),
     );
-    setHour("");
-    setMinute("");
-    setEditingRecord(null);
-  }, [dispatch, editingRecord, hour, minute]);
+    setCheckInTime({ hour: "", minute: "" });
+    setTimeout(() => {
+      router.back();
+    }, 500);
+  }, [checkInTime.hour, checkInTime.minute, date, dispatch]);
 
   const handleCheckOut = useCallback(async () => {
     if (!currentRecord && !editingRecord) return;
-    if (hour === "" || minute === "") {
+    if (checkOutTime.hour === "" || checkOutTime.minute === "") {
       setErrorMsg("Vui lòng nhập giờ và phút");
       return;
     } else {
@@ -114,145 +102,54 @@ export default function CheckInScreen() {
 
     await dispatch(
       checkOut({
-        hour: parseInt(hour, 10),
-        minute: parseInt(minute, 10),
+        hour: parseInt(checkOutTime.hour, 10),
+        minute: parseInt(checkOutTime.minute, 10),
       }),
     );
     dispatch(clearCurrentRecord());
-    setHour("");
-    setMinute("");
+    setCheckOutTime({ hour: "", minute: "" });
+    router.back();
+  }, [
+    currentRecord,
+    editingRecord,
+    checkOutTime.hour,
+    checkOutTime.minute,
+    dispatch,
+  ]);
+
+  const handleUpdate = useCallback(async () => {
+    if (checkInTime.hour === "" || checkInTime.minute === "") {
+      setErrorMsg("Vui lòng nhập giờ và phút");
+      return;
+    } else if (checkOutTime.hour === "" || checkOutTime.minute === "") {
+      setErrorMsg("Vui lòng nhập giờ và phút");
+      return;
+    }
+    await dispatch(
+      updateAttendance({
+        check_in_hour: parseInt(checkInTime.hour, 10),
+        check_in_minute: parseInt(checkInTime.minute, 10),
+        check_out_hour: parseInt(checkOutTime.hour, 10),
+        check_out_minute: parseInt(checkOutTime.minute, 10),
+        date: date as string,
+      }),
+    );
+    setCheckInTime(initTime);
+    setCheckOutTime(initTime);
     setEditingRecord(null);
-  }, [dispatch, currentRecord, editingRecord, hour, minute]);
-
-  const handleUpdateCheckIn = useCallback(async () => {
-    if (!editingRecord) return;
-    await handleCheckIn();
     router.back();
-  }, [editingRecord, handleCheckIn]);
+  }, [checkInTime, checkOutTime.hour, checkOutTime.minute, date, dispatch]);
 
-  const handleUpdateCheckOut = useCallback(async () => {
-    if (!editingRecord) return;
-    await handleCheckOut();
-    router.back();
-  }, [editingRecord, handleCheckOut]);
+  useEffect(() => {
+    getRecordForDate();
+  }, [getRecordForDate]);
 
-  const renderWhenCheckedIn = () => {
-    return currentRecord ? (
-      <>
-        <Text style={styles.checkInTime}>
-          Check-in lúc{" "}
-          {new Date(currentRecord.check_in_time).toLocaleTimeString("vi-VN", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </Text>
-        {currentRecord.method === "deep_link" && (
-          <View style={styles.methodBadge}>
-            <Text style={styles.methodBadgeText}>Qua đường dẫn</Text>
-          </View>
-        )}
-      </>
-    ) : (
-      <Text style={styles.emptyText}>Nhấn để ghi nhận chấm công</Text>
-    );
-  };
-
-  const renderEditingRecord = () => {
-    return (
-      <>
-        <Text style={styles.checkInTime}>
-          Check-in lúc{" "}
-          {editingRecord.check_in_time
-            ? new Date(editingRecord.check_in_time).toLocaleTimeString(
-                "vi-VN",
-                {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                },
-              )
-            : "-"}
-        </Text>
-        {editingRecord.check_out_time && (
-          <Text style={styles.checkInTime}>
-            Check-out lúc{" "}
-            {new Date(editingRecord.check_out_time).toLocaleTimeString(
-              "vi-VN",
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-              },
-            )}
-          </Text>
-        )}
-      </>
-    );
-  };
-
-  const renderEditingRecordActions = () => {
-    return (
-      <View style={{ flexDirection: "row", gap: 12 }}>
-        <TouchableOpacity
-          style={[styles.button, styles.buttonPrimary]}
-          onPress={handleUpdateCheckIn}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonPrimaryText}>Cập nhật Check In</Text>
-          )}
-        </TouchableOpacity>
-        <View style={{ height: 12 }} />
-        <TouchableOpacity
-          style={[styles.button, styles.buttonDanger]}
-          onPress={handleUpdateCheckOut}
-          disabled={isLoading}
-        >
-          <Text style={styles.buttonDangerText}>Cập nhật Check Out</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-  const renderCheckinStatus = () => {
-    return (
-      <View style={{ flexDirection: "row", gap: 12, justifyContent: "center" }}>
-        {currentRecord?.check_in_time && !currentRecord?.check_out_time && (
-          <TouchableOpacity
-            style={[styles.button, styles.buttonPrimary]}
-            onPress={handleCheckIn}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonPrimaryText}>Check In</Text>
-            )}
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          style={[styles.button, styles.buttonDanger]}
-          onPress={handleCheckOut}
-        >
-          <Text style={styles.buttonDangerText}>Check Out</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-  const subtitleText = date
-    ? new Date(date as string).toLocaleDateString("vi-VN", {
-        weekday: "long",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
-    : new Date().toLocaleDateString("vi-VN", {
-        weekday: "long",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+  const subtitleText = new Date(date as string).toLocaleDateString("vi-VN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
   return (
     <View
@@ -264,10 +161,16 @@ export default function CheckInScreen() {
         },
       ]}
     >
+      <View>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.header}>
-        <Text style={styles.title}>
-          {status === "checked_in" ? "Đang làm việc" : "Chưa check-in"}
-        </Text>
+        <Text style={styles.title}>Chấm Công</Text>
         <Text style={styles.subtitle}>{subtitleText}</Text>
       </View>
       <View
@@ -276,36 +179,83 @@ export default function CheckInScreen() {
           status === "checked_in" && styles.statusCardActive,
         ]}
       >
-        {editingRecord ? renderEditingRecord() : renderWhenCheckedIn()}
+        {editingRecord ? (
+          <View>
+            <Text style={styles.checkInTime}>
+              {`Check-in lúc ${dateToLocaleTimeString(editingRecord.check_in_time)}`}
+            </Text>
+            {editingRecord.check_out_time && (
+              <Text style={styles.checkInTime}>
+                {`Check-out lúc ${dateToLocaleTimeString(editingRecord.check_out_time)}`}
+              </Text>
+            )}
+          </View>
+        ) : (
+          <Text style={styles.emptyText}>Nhấn để ghi nhận chấm công</Text>
+        )}
       </View>
       {errorMsg && (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>{errorMsg}</Text>
         </View>
       )}
-      <View style={styles.actions}>
-        <View style={styles.timeInputContainer}>
-          <Text style={styles.timeLabel}>Giờ</Text>
-          <TextInput
-            style={styles.timeInput}
-            keyboardType="numeric"
-            maxLength={2}
-            placeholder="HH"
-            value={hour}
-            onChangeText={setHour}
-          />
-          <Text style={[styles.timeLabel, { marginLeft: 12 }]}>Phút</Text>
-          <TextInput
-            style={styles.timeInput}
-            keyboardType="numeric"
-            maxLength={2}
-            placeholder="MM"
-            value={minute}
-            onChangeText={setMinute}
-          />
+      <Form
+        hour={checkInTime.hour}
+        hourLabel={"Giờ"}
+        minute={checkInTime.minute}
+        minuteLabel={"Phút"}
+        onChangeHour={(hour: string) =>
+          setCheckInTime((prev) => ({ ...prev, hour: hour }))
+        }
+        onChangeMinute={(minute: string) =>
+          setCheckInTime((prev) => ({ ...prev, minute: minute }))
+        }
+      />
+      {!editingRecord && (
+        <View style={styles.buttonWrapper}>
+          <View style={{ width: 150 }}>
+            <Button
+              label={"Check In"}
+              onPress={handleCheckIn}
+              isDisabled={isLoading}
+            />
+          </View>
         </View>
-        {editingRecord ? renderEditingRecordActions() : renderCheckinStatus()}
-      </View>
+      )}
+      <Form
+        hour={checkOutTime.hour}
+        hourLabel={"Giờ"}
+        minute={checkOutTime.minute}
+        minuteLabel={"Phút"}
+        onChangeHour={(hour: string) =>
+          setCheckOutTime((prev) => ({ ...prev, hour: hour }))
+        }
+        onChangeMinute={(minute: string) =>
+          setCheckOutTime((prev) => ({ ...prev, minute: minute }))
+        }
+      />
+      {!editingRecord && (
+        <View style={styles.buttonWrapper}>
+          <View style={{ width: 150 }}>
+            <Button
+              label={"Check Out"}
+              onPress={handleCheckOut}
+              isDisabled={isLoading}
+            />
+          </View>
+        </View>
+      )}
+      {editingRecord && (
+        <View style={[styles.buttonWrapper, { marginTop: 10 }]}>
+          <View style={{ width: 150 }}>
+            <Button
+              label={"Update"}
+              onPress={handleUpdate}
+              isDisabled={isLoading}
+            />
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -317,15 +267,11 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: "#d8d4bcf0",
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 24,
-  },
   header: {
     marginBottom: 24,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "700",
     color: "#1A1A1A",
     marginBottom: 4,
@@ -348,29 +294,11 @@ const styles = StyleSheet.create({
     borderColor: "#006272",
     backgroundColor: "transparent",
   },
-  locationName: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#1A1A1A",
-    marginBottom: 8,
-  },
   checkInTime: {
     fontSize: 15,
     color: "#006272",
     marginBottom: 10,
     marginTop: 10,
-  },
-  methodBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "transparent",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  methodBadgeText: {
-    fontSize: 12,
-    color: "#006272",
-    fontWeight: "500",
   },
   emptyText: {
     fontSize: 15,
@@ -391,58 +319,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#A32D2D",
   },
-  errorDismiss: {
-    fontSize: 14,
-    color: "#A32D2D",
-    fontWeight: "600",
-    marginLeft: 8,
-  },
-  timeInputContainer: {
+  buttonWrapper: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  timeLabel: {
-    fontSize: 14,
-    color: "#1A1A1A",
-    marginRight: 8,
-    fontWeight: "bold",
-  },
-  timeInput: {
-    width: 135,
-    height: 43,
-    borderWidth: 2,
-    borderColor: "#E8E8E4",
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    backgroundColor: "transparent",
-  },
-  actions: {
-    marginTop: 8,
-  },
-  button: {
-    height: 40,
-    width: 160,
-    borderRadius: 30,
-    alignItems: "center",
     justifyContent: "center",
+    gap: 20,
   },
-  buttonPrimary: {
-    backgroundColor: "#006272",
-  },
-  buttonPrimaryText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  buttonDanger: {
-    backgroundColor: "transparent",
-    borderWidth: 1.5,
-    borderColor: "#A32D2D",
-  },
-  buttonDangerText: {
-    color: "#A32D2D",
-    fontSize: 15,
-    fontWeight: "600",
+  backButton: {
+    marginRight: 10,
+    padding: 5,
   },
 });

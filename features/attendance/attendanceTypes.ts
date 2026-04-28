@@ -4,7 +4,6 @@ export type AttendanceStatus = "idle" | "checked_in" | "checked_out";
 export type CheckInMethod = "deep_link" | "qr_scan" | "manual" | "notification";
 
 export interface AttendanceRecord {
-  id: string;
   user_id: string;
   location_id: string;
   location_name: string;

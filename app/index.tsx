@@ -1,7 +1,6 @@
 import { LoadingView } from "@/components/attendance/LoadingView";
 import Button from "@/components/Button";
 import HistoryDayView from "@/components/history/HistoryDayView";
-import HistoryHeader from "@/components/history/HistoryHeader";
 import HistoryMonthView from "@/components/history/HistoryMonthView";
 import Mode from "@/components/mode/Mode";
 import ModeToggle from "@/components/mode/ModeToggle";
@@ -24,6 +23,19 @@ export default function HomeScreen() {
     (s: RootState) => s.attendance,
   );
   const [viewMode, setViewMode] = useState<HistoryViewMode>("day");
+  const pushToCheckIn = () => {
+    router.push({
+      pathname: "/checkin",
+      params: { date: selectedDate },
+    });
+  };
+
+  // console.log(
+  //   "check contidional: ",
+  //   viewMode === "day" && !hasAttendance,
+  //   hasAttendance,
+  //   selectedDate,
+  // );
 
   useEffect(() => {
     const now = new Date();
@@ -48,7 +60,6 @@ export default function HomeScreen() {
   return (
     <View style={[styles.container]}>
       <SafeAreaView edges={["top"]} style={styles.safeArea}>
-        <HistoryHeader />
         <ModeToggle>
           <Mode
             label="Ngày"
@@ -73,7 +84,7 @@ export default function HomeScreen() {
       </SafeAreaView>
       {viewMode === "day" && !hasAttendance && (
         <SafeAreaView style={styles.buttonContainer}>
-          <Button label={"+"} onPress={() => router.push("/checkin")} />
+          <Button label={"+"} onPress={pushToCheckIn} />
         </SafeAreaView>
       )}
     </View>
@@ -84,6 +95,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
+    paddingTop: 10,
     backgroundColor: "#d8d4bcf0",
   },
   safeArea: {

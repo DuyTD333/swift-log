@@ -53,6 +53,19 @@ export const loadAttendanceFromStorage = createAsyncThunk(
   },
 );
 
+export const getByDate = createAsyncThunk(
+  "attendance/getByDate",
+  async (date: string, { rejectWithValue }) => {
+    try {
+      const response: AttendanceRecord | undefined =
+        await attendanceService.getByDate(date);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Check-in thất bại");
+    }
+  },
+);
+
 export const checkIn = createAsyncThunk(
   "attendance/checkIn",
   async (
@@ -89,6 +102,28 @@ export const checkOut = createAsyncThunk(
     await persistData(STORAGE_KEYS.HISTORY, newHistory.slice(0, 50)); // Giới hạn 50 bản ghi cho nhẹ
 
     return response;
+  },
+);
+
+export const updateAttendance = createAsyncThunk(
+  "attendance/update",
+  async (
+    params: {
+      check_in_hour: number;
+      check_in_minute: number;
+      check_out_hour: number;
+      check_out_minute: number;
+      date: string;
+    },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response: AttendanceRecord = await attendanceService.update(params);
+      await persistData(STORAGE_KEYS.CURRENT_RECORD, response);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Update Attendance thất bại");
+    }
   },
 );
 
@@ -221,6 +256,7 @@ const attendanceSlice = createSlice({
       .addCase(fetchAttendanceByDate.fulfilled, (state, action) => {
         if (action.payload) {
           state.selectedDate = action.payload.check_in_time.split("T")[0];
+          state.hasAttendance = true;
         }
       });
   },

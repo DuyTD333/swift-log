@@ -19,7 +19,6 @@ function RootStackWithInitialization() {
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    // Load attendance data from AsyncStorage on app start
     dispatch(loadAttendanceFromStorage());
   }, [dispatch]);
 
