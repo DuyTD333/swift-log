@@ -21,8 +21,15 @@ export function AttendanceSummary({
   record,
   selectedDate,
 }: AttendanceSummaryProps) {
+  const formatCheckInTime = (time: Date) => {
+    return time.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const calculateStats = () => {
-    if (!record.check_in_time || !record.check_out_time) {
+    if (!record.check_in_time) {
       return {
         checkinTime: null,
         checkoutTime: null,
@@ -33,7 +40,16 @@ export function AttendanceSummary({
     }
 
     const checkinTime = new Date(record.check_in_time);
-    const checkoutTime = new Date(record.check_out_time);
+    if (!record.check_out_time) {
+      return {
+        checkinTime: formatCheckInTime(checkinTime),
+        checkoutTime: null,
+        totalHours: 0,
+        totalSalary: 0,
+        status: "incomplete",
+      } as AttendanceStats;
+    }
+    const checkoutTime = new Date(record?.check_out_time!);
     const diffHours =
       (checkoutTime.getTime() - checkinTime.getTime()) / (1000 * 60 * 60);
     const totalHours = Math.round(diffHours * 100) / 100;
@@ -43,14 +59,8 @@ export function AttendanceSummary({
     }
 
     return {
-      checkinTime: checkinTime.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      checkoutTime: checkoutTime.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      checkinTime: formatCheckInTime(checkinTime),
+      checkoutTime: formatCheckInTime(checkoutTime),
       totalHours,
       totalSalary,
       status: "complete",

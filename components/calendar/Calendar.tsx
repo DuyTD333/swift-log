@@ -68,10 +68,7 @@ export function Calendar({
     );
   };
 
-  const monthName = currentMonth.toLocaleDateString("vi-VN", {
-    month: "long",
-    year: "numeric",
-  });
+  const monthName = `${String(currentMonth.getMonth() + 1).padStart(2, "0")}/${currentMonth.getFullYear()}`;
 
   return (
     <View style={styles.container}>

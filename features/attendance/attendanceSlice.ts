@@ -256,6 +256,7 @@ const attendanceSlice = createSlice({
       .addCase(fetchAttendanceByDate.fulfilled, (state, action) => {
         if (action.payload) {
           state.selectedDate = action.payload.check_in_time.split("T")[0];
+          state.hasAttendance = true;
         }
       });
   },

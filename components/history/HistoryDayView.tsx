@@ -1,7 +1,7 @@
 import { setSelectedDate } from "@/features/attendance/attendanceSlice";
 import { AppDispatch, RootState } from "@/store";
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { AttendanceSummary } from "../attendance/AttendanceSummary";

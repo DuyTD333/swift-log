@@ -1,7 +1,8 @@
 import type { AppDispatch, RootState } from "@/store";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -14,6 +15,7 @@ import {
 import { AttendanceRecord } from "@/features/attendance/attendanceTypes";
 import Form from "@/components/checkin/Form";
 import Button from "@/components/Button";
+import { dateToLocaleTimeString } from "@/utils";
 
 interface CheckIn {
   hour: string;
@@ -41,16 +43,6 @@ export default function CheckInScreen() {
   const [checkInTime, setCheckInTime] = React.useState<CheckIn>(initTime);
   const [checkOutTime, setCheckOutTime] = React.useState<CheckOut>(initTime);
   const [errorMsg, setErrorMsg] = React.useState<string>("");
-
-  // console.log("=============================================");
-  // console.log("=============================================");
-  // console.log("=============================================");
-  // console.log(JSON.stringify(editingRecord, null, 2));
-  // console.log('CheckInTime: ', JSON.stringify(checkInTime, null, 2));
-  // console.log('CheckOutTime', JSON.stringify(checkOutTime, null, 2));
-  // console.log("=============================================");
-  // console.log("=============================================");
-  // console.log("=============================================");
 
   const getRecordForDate = useCallback(async () => {
     const record = await dispatch(fetchAttendanceByDate(date as string));
@@ -82,15 +74,6 @@ export default function CheckInScreen() {
     } else {
       setErrorMsg("");
     }
-
-    console.log('handleCheckIn: ', JSON.stringify({
-        locationId: "LOTSO",
-        locationName: "LOTSO",
-        method: "manual",
-        date: date as string,
-        hour: parseInt(checkInTime.hour, 10),
-        minute: parseInt(checkInTime.minute, 10),
-      }, null, 2));
 
     await dispatch(
       checkIn({
@@ -142,7 +125,7 @@ export default function CheckInScreen() {
       setErrorMsg("Vui lòng nhập giờ và phút");
       return;
     }
-    const updatedAttendance = await dispatch(
+    await dispatch(
       updateAttendance({
         check_in_hour: parseInt(checkInTime.hour, 10),
         check_in_minute: parseInt(checkInTime.minute, 10),
@@ -151,7 +134,6 @@ export default function CheckInScreen() {
         date: date as string,
       }),
     );
-    console.log("updatedAttendance: ", updatedAttendance);
     setCheckInTime(initTime);
     setCheckOutTime(initTime);
     setEditingRecord(null);
@@ -179,10 +161,16 @@ export default function CheckInScreen() {
         },
       ]}
     >
+      <View>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.header}>
-        <Text style={styles.title}>
-          {status === "checked_in" ? "Đang làm việc" : "Chưa check-in"}
-        </Text>
+        <Text style={styles.title}>Chấm Công</Text>
         <Text style={styles.subtitle}>{subtitleText}</Text>
       </View>
       <View
@@ -192,13 +180,16 @@ export default function CheckInScreen() {
         ]}
       >
         {editingRecord ? (
-          <Text style={styles.checkInTime}>
-            Check-in lúc{" "}
-            {new Date(editingRecord.check_in_time).toLocaleTimeString("vi-VN", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
+          <View>
+            <Text style={styles.checkInTime}>
+              {`Check-in lúc ${dateToLocaleTimeString(editingRecord.check_in_time)}`}
+            </Text>
+            {editingRecord.check_out_time && (
+              <Text style={styles.checkInTime}>
+                {`Check-out lúc ${dateToLocaleTimeString(editingRecord.check_out_time)}`}
+              </Text>
+            )}
+          </View>
         ) : (
           <Text style={styles.emptyText}>Nhấn để ghi nhận chấm công</Text>
         )}
@@ -280,7 +271,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "700",
     color: "#1A1A1A",
     marginBottom: 4,
@@ -332,5 +323,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     gap: 20,
+  },
+  backButton: {
+    marginRight: 10,
+    padding: 5,
   },
 });
