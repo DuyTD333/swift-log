@@ -24,7 +24,7 @@ interface CheckIn {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface CheckOut extends CheckIn { }
+interface CheckOut extends CheckIn {}
 
 const initTime = {
   hour: "",
@@ -68,6 +68,22 @@ export default function CheckInScreen() {
     }
   }, [date, dispatch]);
 
+  const refreshHistory = useCallback(async () => {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+      .toISOString()
+      .split("T")[0];
+    const endDate = now.toISOString().split("T")[0];
+
+    await dispatch(
+      fetchAttendanceHistory({
+        userId: "current-user-id",
+        startDate,
+        endDate,
+      }),
+    );
+  }, [dispatch]);
+
   const handleCheckIn = useCallback(async () => {
     if (checkInTime.hour === "" || checkInTime.minute === "") {
       setErrorMsg("Vui lòng nhập giờ và phút");
@@ -87,23 +103,11 @@ export default function CheckInScreen() {
       }),
     );
 
-    const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-      .toISOString()
-      .split("T")[0];
-    const endDate = now.toISOString().split("T")[0];
-
-    await dispatch(
-      fetchAttendanceHistory({
-        userId: "current-user-id",
-        startDate,
-        endDate,
-      }),
-    );
+    await refreshHistory();
     dispatch(clearCurrentRecord());
     setCheckInTime({ hour: "", minute: "" });
     router.back();
-  }, [checkInTime.hour, checkInTime.minute, date, dispatch]);
+  }, [checkInTime.hour, checkInTime.minute, date, dispatch, refreshHistory]);
 
   const handleCheckOut = useCallback(async () => {
     if (!currentRecord && !editingRecord) return;
@@ -148,11 +152,21 @@ export default function CheckInScreen() {
         date: date as string,
       }),
     );
+
+    await refreshHistory();
+    dispatch(clearCurrentRecord());
     setCheckInTime(initTime);
     setCheckOutTime(initTime);
     setEditingRecord(null);
     router.back();
-  }, [checkInTime, checkOutTime.hour, checkOutTime.minute, date, dispatch]);
+  }, [
+    checkInTime,
+    checkOutTime.hour,
+    checkOutTime.minute,
+    date,
+    dispatch,
+    refreshHistory,
+  ]);
 
   useEffect(() => {
     getRecordForDate();
