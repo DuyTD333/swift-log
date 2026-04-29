@@ -123,14 +123,14 @@ export const attendanceService = {
     if (!attendanceRecord) {
       throw new Error(`Không tìm thấy bản ghi update ${params.date}`);
     }
-    const checkinDate = new Date();
+    const checkinDate = new Date(params.date);
     if (
       typeof params.check_in_hour === "number" &&
       typeof params.check_in_minute === "number"
     ) {
       checkinDate.setHours(params.check_in_hour, params.check_in_minute, 0, 0);
     }
-    const checkoutDate = new Date();
+    const checkoutDate = new Date(params.date);
     if (
       typeof params.check_out_hour === "number" &&
       typeof params.check_out_minute === "number"
