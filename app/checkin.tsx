@@ -10,6 +10,7 @@ import {
   checkOut,
   clearCurrentRecord,
   fetchAttendanceByDate,
+  fetchAttendanceHistory,
   updateAttendance,
 } from "../features/attendance/attendanceSlice";
 import { AttendanceRecord } from "@/features/attendance/attendanceTypes";
@@ -23,7 +24,7 @@ interface CheckIn {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface CheckOut extends CheckIn {}
+interface CheckOut extends CheckIn { }
 
 const initTime = {
   hour: "",
@@ -85,10 +86,23 @@ export default function CheckInScreen() {
         minute: parseInt(checkInTime.minute, 10),
       }),
     );
+
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+      .toISOString()
+      .split("T")[0];
+    const endDate = now.toISOString().split("T")[0];
+
+    await dispatch(
+      fetchAttendanceHistory({
+        userId: "current-user-id",
+        startDate,
+        endDate,
+      }),
+    );
+    dispatch(clearCurrentRecord());
     setCheckInTime({ hour: "", minute: "" });
-    setTimeout(() => {
-      router.back();
-    }, 500);
+    router.back();
   }, [checkInTime.hour, checkInTime.minute, date, dispatch]);
 
   const handleCheckOut = useCallback(async () => {

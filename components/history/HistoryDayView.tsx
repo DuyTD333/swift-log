@@ -74,10 +74,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#E8E8E4",
   },
-  emptyIcon: {
-    marginBottom: 16,
-    opacity: 0.6,
-  },
   emptyStateTitle: {
     fontSize: 16,
     fontWeight: "600",

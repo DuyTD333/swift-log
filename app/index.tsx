@@ -30,13 +30,6 @@ export default function HomeScreen() {
     });
   };
 
-  // console.log(
-  //   "check contidional: ",
-  //   viewMode === "day" && !hasAttendance,
-  //   hasAttendance,
-  //   selectedDate,
-  // );
-
   useEffect(() => {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), now.getMonth(), 1)

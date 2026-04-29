@@ -228,15 +228,6 @@ const styles = StyleSheet.create({
   monthPickerOptionTextActive: {
     color: "#1A1A1A",
   },
-  monthPickerOptionCount: {
-    fontSize: 12,
-    color: "#006272",
-    fontWeight: "400",
-  },
-  monthPickerOptionCountActive: {
-    color: "#006272",
-    fontWeight: "600",
-  },
   noMonthsText: {
     paddingVertical: 15,
     alignItems: "center",
@@ -244,9 +235,6 @@ const styles = StyleSheet.create({
   noMonthsLabel: {
     fontSize: 13,
     color: "#006272",
-  },
-  summaryContainer: {
-    marginBottom: 15,
   },
   monthRecordsContainer: {
     marginBottom: 10,
@@ -275,23 +263,12 @@ const styles = StyleSheet.create({
     color: "#6B6B68",
     fontWeight: "500",
   },
-  monthHeaderDays: {
-    fontSize: 13,
-    color: "#6B6B68",
-    fontWeight: "500",
-  },
   daysContainer: {
     backgroundColor: "transparent",
     borderRadius: 28,
     borderWidth: 1,
     borderColor: "#E8E8E4",
     marginTop: 13,
-  },
-  dayDayOfWeek: {
-    fontSize: 12,
-    color: "#006272",
-    fontWeight: "400",
-    textTransform: "capitalize",
   },
   dayRecordContainer: {
     backgroundColor: "transparent",
