@@ -1,3 +1,4 @@
+import { dateToLocaleTimeString } from "@/utils/dateTimeFormat";
 import type { AttendanceRecord } from "@/features/attendance/attendanceTypes";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -21,13 +22,6 @@ export function AttendanceSummary({
   record,
   selectedDate,
 }: AttendanceSummaryProps) {
-  const formatCheckInTime = (time: Date) => {
-    return time.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const calculateStats = () => {
     if (!record.check_in_time) {
       return {
@@ -42,7 +36,7 @@ export function AttendanceSummary({
     const checkinTime = new Date(record.check_in_time);
     if (!record.check_out_time) {
       return {
-        checkinTime: formatCheckInTime(checkinTime),
+        checkinTime: dateToLocaleTimeString(checkinTime),
         checkoutTime: null,
         totalHours: 0,
         totalSalary: 0,
@@ -59,8 +53,8 @@ export function AttendanceSummary({
     }
 
     return {
-      checkinTime: formatCheckInTime(checkinTime),
-      checkoutTime: formatCheckInTime(checkoutTime),
+      checkinTime: dateToLocaleTimeString(checkinTime),
+      checkoutTime: dateToLocaleTimeString(checkoutTime),
       totalHours,
       totalSalary,
       status: "complete",
