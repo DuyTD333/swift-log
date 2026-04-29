@@ -32,7 +32,7 @@ const persistData = async (key: string, data: any) => {
       await AsyncStorage.setItem(key, JSON.stringify(data));
     }
   } catch (e) {
-    console.error(`[Storage Error] Fail to save ${key}:`, e);
+    console.error(`[Lỗi Lưu Trữ] Lưu ${key} thất bại:`, e);
   }
 };
 
@@ -152,7 +152,7 @@ const saveCurrentRecordToStorage = async (record: AttendanceRecord | null) => {
       await AsyncStorage.removeItem("@attendance_current_record");
     }
   } catch (error) {
-    console.error("[AsyncStorage] Save current record failed:", error);
+    console.error("[AsyncStorage] Lưu bản ghi hiện tại thất bại:", error);
   }
 };
 
@@ -174,7 +174,7 @@ const saveHistoryToStorage = async (history: AttendanceRecord[]) => {
   try {
     await AsyncStorage.setItem("@attendance_history", JSON.stringify(history));
   } catch (error) {
-    console.error("[AsyncStorage] Save history failed:", error);
+    console.error("[AsyncStorage] Lưu lịch sử thất bại:", error);
   }
 };
 

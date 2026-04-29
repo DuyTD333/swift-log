@@ -15,7 +15,7 @@ const saveToStorage = async (key: string, data: any): Promise<void> => {
   try {
     await AsyncStorage.setItem(key, JSON.stringify(data));
   } catch (error) {
-    console.error(`[AsyncStorage] Failed to save to ${key}:`, error);
+    console.error(`[AsyncStorage] Lưu vào ${key} thất bại:`, error);
     throw error;
   }
 };
@@ -25,7 +25,7 @@ const getFromStorage = async <T = any>(key: string): Promise<T | null> => {
     const data = await AsyncStorage.getItem(key);
     return data ? JSON.parse(data) : null;
   } catch (error) {
-    console.error(`[AsyncStorage] Failed to get ${key}:`, error);
+    console.error(`[AsyncStorage] Lấy ${key} thất bại:`, error);
     return null;
   }
 };
@@ -34,7 +34,7 @@ const removeFromStorage = async (key: string): Promise<void> => {
   try {
     await AsyncStorage.removeItem(key);
   } catch (error) {
-    console.error(`[AsyncStorage] Failed to remove ${key}:`, error);
+    console.error(`[AsyncStorage] Xóa ${key} thất bại:`, error);
   }
 };
 
@@ -236,14 +236,8 @@ export const attendanceService = {
     const totalHours = totalMs / (1000 * 60 * 60);
 
     return {
-      checkinTime: checkinTime.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      checkoutTime: checkoutTime.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      checkinTime: dateToLocaleTimeString(checkinTime),
+      checkoutTime: dateToLocaleTimeString(checkoutTime),
       totalHours: Math.round(totalHours * 100) / 100,
     };
   },

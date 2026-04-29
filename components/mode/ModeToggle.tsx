@@ -11,6 +11,7 @@ export default function ModeToggle({ children }: ModeToggleProps) {
 
 const styles = StyleSheet.create({
   modeToggle: {
+    width: 210,
     flexDirection: "row",
     justifyContent: "center",
     backgroundColor: "transparent",
