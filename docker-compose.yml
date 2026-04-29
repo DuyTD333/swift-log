@@ -1,0 +1,13 @@
+services:
+  expo:
+    image: node:20
+    container_name: expo-container
+    volumes:
+      - .:/app
+      - /app/node_modules # Giữ node_modules bên trong container để tránh xung đột
+    working_dir: /app
+    ports:
+      - "8081:8081"
+    command: sh -c "npm install && npx expo start --tunnel"
+    stdin_open: true # tương đương -i
+    tty: true # tương đương -t
