@@ -68,7 +68,6 @@ export const attendanceService = {
       STORAGE_KEYS.HISTORY,
     );
     const mergedHistory = [record, ...(history || [])];
-    console.log('mergedHistory: ', JSON.stringify(mergedHistory, null, 2));
 
     await Promise.all([
       saveToStorage(STORAGE_KEYS.HISTORY, mergedHistory),
